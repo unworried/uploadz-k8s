@@ -11,7 +11,7 @@ function main() {
 
     /* Health Check Endpoint */
     app.get("/health", (_req, res) => {
-        res.json({ status: "OK", service: "image-service" });
+        res.json({ status: "OK", service: "image" });
     });
 
     app.use("/api/images", routes);
