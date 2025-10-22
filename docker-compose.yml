@@ -42,5 +42,18 @@ services:
       postgres:
         condition: service_healthy
 
+  stats-service:
+    build: ./stats-service
+    ports:
+      - 3003:3003
+    environment:
+      DB_HOST: postgres
+      DB_NAME: images_db
+      DB_USER: postgres
+      DB_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
