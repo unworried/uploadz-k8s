@@ -3,17 +3,28 @@ import { Search, X, Upload } from 'lucide-react'
 
 import Gallery from './components/Gallery';
 import UploadPage from './components/UploadPage';
+import OpenImage from './components/OpenImage';
 import { API } from './config';
 
 function App() {
-  const [mainState, setMainState] = useState("catalogue");
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const [mainState, setMainState] = useState(() => {
+    return urlParams.get("image") ? "open" : "catalogue"
+  });
+  const [query, setQuery] = useState(urlParams.get('q') || "");
+  const [sort, setSort] = useState(urlParams.get("sort") || "newest");
+
   const [images, setImages] = useState([]);
   const [curSelection, setCurSelection] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const [query, setQuery] = useState(urlParams.get('q') || "");
-  const [sort, setSort] = useState(urlParams.get("sort") || "newest");
+  useEffect(() => {
+    const imageId = urlParams.get("image");
+    if (imageId) {
+      openImage(imageId);
+    }
+  }, []);
 
   useEffect(() => {
     if (mainState == "catalogue") {
@@ -25,10 +36,13 @@ function App() {
     const params = new URLSearchParams
     if (query) params.set('q', query);
     if (sort !== "newest") params.set("sort", sort);
+    if (mainState == "open" && curSelection) {
+      params.set("image", curSelection.id);
+    }
 
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
-  }, [query, sort]);
+  }, [query, sort, mainState, curSelection]);
 
   const fetchCatalogue = async () => {
     setLoading(true);
@@ -63,8 +77,24 @@ function App() {
     setMainState("catalogue");
     setQuery("");
     setSort("newest")
+    setCurSelection(null);
     window.history.replaceState({}, "", window.location.pathname);
     fetchCatalogue();
+  };
+
+  const openImage = async (imageId) => {
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API.images}/${imageId}`)
+      const data = await res.json();
+      setCurSelection(data.image);
+      setMainState("open")
+    } catch (err) {
+      console.error("image fetch error:", err);
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -107,8 +137,13 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {mainState === "catalogue" && <Gallery images={images} loading={loading} onImageClick={() => console.log("hi")} />}
+        {mainState === "catalogue" && <Gallery images={images} loading={loading} onImageClick={openImage} />}
         {mainState === "upload" && <UploadPage onSuccess={() => {setMainState("catalogue");fetchCatalogue();}} />}
+        {mainState === "open" && curSelection && (
+          <OpenImage image={curSelection} onClose={() => setMainState("catalogue")}
+            onDelete={() => {setMainState("catalogue");fetchCatalogue();}}
+          />
+        )}
       </main>
     </div>
   );

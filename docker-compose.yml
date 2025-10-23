@@ -55,5 +55,14 @@ services:
       postgres:
         condition: service_healthy
 
+  frontend:
+    build: ./frontend
+    ports:
+      - 80:80
+    depends_on:
+      - image-service
+      - catalogue-service
+      - stats-service
+
 volumes:
   postgres-data:

@@ -1,6 +1,7 @@
 const API = {
-  catalogue: "http://localhost:3002/api/catalogue",
-  images: "http://localhost:3001/api/images",
+  stats: "/api/stats",
+  catalogue: "/api/catalogue",
+  images: "/api/images",
 }
 
 export { API };
